@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qf.dao.RoleInfoMapper">
+
+	<resultMap id="menuInfoMap" type="com.qf.pojo.MenuInfo">
+		<id column="pid" property="mid"></id>
+		<result column="pname" property="menuName"></result>
+		<result column="picon" property="menuIcon"></result>
+		<result column="purl" property="menuUrl"></result>
+		<collection property="childMenus" ofType="com.qf.pojo.MenuInfo">
+			<id column="mid" property="mid"></id>
+			<result column="menuname" property="menuName"></result>
+			<result column="menuicon" property="menuIcon"></result>
+			<result column="menu_url" property="menuUrl"></result>
+			<result column="parentid" property="parentId"></result>
+		</collection>
+
+	</resultMap>
+
+
+    <!--根据id来选择该用户对应的角色信息-->
+     <select id="selectUserById" parameterType="int" resultType="com.qf.vo.RoleInfo">
+<!--
+         /* 根据一个userid找到这个用户对应的角色id
+		SELECT r.roleid from roleinfo r,user_role u where r.roleid=u.roleid and u.userid=1 */
+		/*定义一个新的列，列名为select，然后表示出这个用户有的权限显示为1，没有的权限显示为0*/
+			select tb1.roleid,tb1.rolename,tb1.shortname, NOT ISNULL(tb1.userid) selected from (select ri.* ,ur.userid from roleinfo ri   left join user_role ur on ri.roleid = ur.roleid and ur.userid = 2) tb1  -->
+
+		SELECT *,'1' selected from roleinfo r where r.roleid in (
+		SELECT r.roleid from roleinfo r,user_role u where r.roleid=u.roleid and u.userid=#{userid} )
+		UNION
+		SELECT *,'0' selected from roleinfo r where r.roleid not in (
+		SELECT r.roleid from roleinfo r,user_role u where r.roleid=u.roleid and u.userid=#{userid} )
+
+     </select>
+
+	<!--添加某一用户的角色-->
+	<insert id="addMenuInfo" parameterType="com.qf.dto.RoleAndUserDto">
+		insert into user_role values (DEFAULT ,${userid},${roleid})
+	</insert>
+
+	<!--根据某某一用户的id来删除其一角色-->
+	<delete id="deleteMenuInfo" parameterType="com.qf.dto.RoleAndUserDto">
+		delete from user_role where userid=#{userid} and roleid=#{roleid}
+	</delete>
+
+	<!--查询所有父角色得信息-->
+	<select id="showRoleInfo" resultType="com.qf.pojo.RoleInfo">
+		select roleinfo.roleid,roleinfo.rolename from roleinfo
+	</select>
+
+	<!--用户登录成功后，，在user.html页面的左侧展现出用户的角色-->
+	<select id="showUserRoleMenu" resultMap="menuInfoMap" parameterType="com.qf.pojo.UserInfo">
+SELECT DISTINCT m1.mid pid,m1.menuname pname,m1.menuicon picon,m1.menu_url purl,m2.* from menuinfo m1,menuinfo m2,role_menu r,(SELECT r.roleid from user_role r,userinfo u where u.username=#{username} AND u.password=#{password} and u.userid=r.userid) tb1 where m1.mid=m2.parentid and r.roleid=tb1.roleid
+	</select>
+</mapper>

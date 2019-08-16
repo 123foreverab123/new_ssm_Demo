@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qf.dao.MenuInfoMapper">
+
+
+    <resultMap id="menuInfoVoMap" type="com.qf.vo.MenuInfoVO">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"></result>
+        <result column="pid" property="pid"></result>
+        <result column="picon" property="icon"></result>
+        <collection property="children" ofType="com.qf.vo.MenuInfoVO">
+            <id column="cid" property="id"></id>
+            <result column="cname" property="name"></result>
+            <result column="menu_url" property="url"></result>
+            <result column="cpid" property="pid"></result>
+            <result column="checked" property="checked"></result>
+            <result column="cicon" property="icon"></result>
+        </collection>
+
+    </resultMap>
+
+    <resultMap id="selectMenuMap" type="com.qf.pojo.MenuInfo">
+        <id column="mid" property="mid"></id>
+        <result property="menuName" column="menuname"></result>
+        <result property="menuIcon" column="menuicon"></result>
+        <result property="menuUrl" column="menu_url"></result>
+        <result property="parentId" column="parentid"></result>
+    </resultMap>
+
+    <select id="ListMenuByRoleid" resultMap="menuInfoVoMap" parameterType="int">
+        <!-- 未被选择集合-->
+        select m2.mid id,m2.menuname name,m2.parentid pid,m2.menuicon picon,m1.mid cid,m1.menuname cname,m1.parentid cpid,m1.menu_url,m1.menuicon cion ,'0' checked from menuinfo m1,menuinfo m2 where m1.mid  not in
+        (select mid from role_menu rm where roleid = #{roleId}) and m1.parentid = m2.mid
+        union
+        <!-- 被选择集合-->
+        select m2.mid id,m2.menuname name,m2.parentid pid,m2.menuicon picon,m1.mid cid,m1.menuname cname,m1.parentid cpid,m1.menu_url,m1.menuicon cion,'1' checked from menuinfo m1,menuinfo m2 where m1.mid  in
+        (select mid from role_menu rm where roleid = #{roleId}) and m1.parentid = m2.mid
+    </select>
+
+
+    <!--//删除父角色里角色-->
+    <delete id="deleteRoleMenu" parameterType="com.qf.dto.RoleMenuDto">
+        delete from role_menu where roleid=#{roleId}
+        and mid not in (<foreach collection="newmenuIds" item="item" separator="," >#{item}</foreach>)
+    </delete>
+    <!--添加父角色里角色-->
+<insert id="addRoleMenu" parameterType="com.qf.dto.RoleMenuDto">
+    insert into role_menu (rmid,roleid,mid) values
+    <foreach collection="newmenuIds"  item="item" separator="," >
+        (default,#{roleId},#{item})
+    </foreach>
+</insert>
+
+    <!--查找出所有的菜单，然后在permission.xml页面上进行显示-->
+    <select id="selectAllMenu" resultMap="selectMenuMap">
+        select * from menuinfo
+    </select>
+</mapper>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    <!-- 1、配置自定控制器扫描路径 -->
+    <!--这里配置的是controller的路径-->
+    <context:component-scan base-package="com.qf.controller"></context:component-scan>
+    <!-- 2、配置静态资源处理 ，对静态资源放行，不写这句话，你在浏览器访问controller层的代码时，会映射不过来-->
+   <!--它会像一个检查员，对进入DispatcherServlet的URL进行筛查，如果发现是静态资源的请求，就将该请求转由Web应用服务器默认的Servlet处理，如果不是静态资源的请求，才由DispatcherServlet继续处理。-->
+    <mvc:default-servlet-handler />
+    <!-- 3、配置注解驱动 -->
+    <!--springmvc得处理器映射器、处理器适配器、视图解析器称为springmvc得三大组件
+    下面得这个配置就是代替注解处理器和适配器得配置-->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <!--4、配置视图解析器，内部资源视图解析器-->
+    <!--根据你写得返回值，进行拼接，比如你的controller层里的代码，前端访问到你这个
+    代码后，你那个代码最后是return “register” 那么后面就会跳转到/register.html得页面-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!--配置前缀-->
+        <property name="prefix" value="/"></property>
+        <!--配置后缀-->
+        <property name="suffix" value=".html"></property>
+    </bean>
+        <!--配置文件上传处理器-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver" />
+
+    <!--&lt;!&ndash;配置拦截器集合&ndash;&gt;
+    <mvc:interceptors>
+        &lt;!&ndash;<!—配置登录拦截器&ndash;&gt;&ndash;&gt;
+        <mvc:interceptor>
+            <mvc:mapping path="/*.html"/>
+            <bean class="com.qf.filter.LoginFilter"/>
+        </mvc:interceptor>
+    </mvc:interceptors>-->
+</beans>
+
